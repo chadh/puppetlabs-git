@@ -1,8 +1,11 @@
-Puppet::Type.newtype(:git_config) do
-  desc <<-DOC
+require 'puppet/resource_api'
+
+Puppet::ResourceApi.register_type(
+  name: 'git_config',
+
+  docs: <<-DOC,
   Used to configure git
   === Examples
-
 
    git_config { 'user.name':
      value => 'John Doe',
@@ -26,42 +29,34 @@ Puppet::Type.newtype(:git_config) do
    }
   DOC
 
-  validate do
-    if self[:value].nil? || (self[:value].respond_to?(:empty?) && self[:value].empty?) || self[:value] == :absent
-      raise('it is required to pass "value"')
-    end
-    warning('Parameter `section` is deprecated, supply the full option name (e.g. "user.email") in the `key` parameter') if
-      self[:section] && !self[:section].empty?
-  end
-
-  newparam(:name, namevar: true) do
-    desc 'The name of the config'
-  end
-
-  newproperty(:value) do
-    desc 'The config value. Example Mike Color or john.doe@example.com'
-  end
-
-  newparam(:user) do
-    desc 'The user for which the config will be set. Default value: root'
-    defaultto 'root'
-  end
-
-  newparam(:key) do
-    desc 'The configuration key. Example: user.email.'
-  end
-
-  autorequire(:user) do
-    self[:user]
-  end
-
-  newparam(:section) do
-    desc 'Deprecated: the configuration section. For example, to set user.email, use section => "user", key => "email".'
-    defaultto ''
-  end
-
-  newparam(:scope) do
-    desc 'The scope of the configuration, can be system or global. Default value: global'
-    defaultto 'global'
-  end
-end
+  attributes: {
+    ensure: {
+      type: 'Enum[present, absent]',
+      desc: 'whether config is present or absent',
+      default: 'present',
+    },
+    name: {
+      type: 'String',
+      desc: 'The name of the config',
+      behavior: :namevar,
+    },
+    value: {
+      type: 'Variant[String,Integer,Boolean]',
+      desc: 'The config value.  Example "Mike Color" or "john.doe@example.com"',
+    },
+    user: {
+      type: 'Optional[String]',
+      desc: 'The user for which the config will be set.',
+      default: 'root',
+    },
+    key: {
+      type: 'Optional[String]',
+      desc: 'The configuration key.  Example "user.email"',
+    },
+    scope: {
+      type: 'Optional[Enum[global, system]]',
+      desc: 'The scope of the configuration.',
+      default: 'global',
+    },
+  }
+)

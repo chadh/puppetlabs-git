@@ -1,51 +1,37 @@
+require 'puppet/resource_api/simple_provider'
+require 'etc'
 require 'shellwords'
 
-Puppet::Type.type(:git_config).provide(:git_config) do
-  mk_resource_methods
-
-  def value
-    require 'etc'
-    user    = @property_hash[:user]    = @resource[:user]
-    key     = @property_hash[:key]     = @resource[:key]
-    section = @property_hash[:section] = @resource[:section]
-    scope   = @property_hash[:scope]   = @resource[:scope]
-    home    = Etc.getpwnam(user)[:dir]
-
-    # Backwards compatibility with deprecated $section parameter.
-    if section && !section.empty?
-      key = "#{section}.#{key}"
-    end
-
-    current = Puppet::Util::Execution.execute(
-      "cd / ; git config --#{scope} --get #{key}",
-      uid: user,
-      failonfail: false,
-      combine: true,
-      custom_environment: { 'HOME' => home },
-    )
-    @property_hash[:value] = current.strip
-    @property_hash[:value]
+class Puppet::Provider::GitConfig::GitConfig
+  def get(context)
+    []
   end
 
-  def value=(value)
-    require 'etc'
-    user    = @resource[:user]
-    key     = @resource[:key]
-    section = @resource[:section]
-    scope   = @resource[:scope]
-    home    = Etc.getpwnam(user)[:dir]
+  def set(context, changes)
+    changes.each do | name, change |
+      should = change[:should]
+      value = should[:value]
+      user = should[:user]
+      key = should[:key]
+      scope = should[:scope]
+      home = Etc.getpwnma(user)[:dir]
 
-    # Backwards compatibility with deprecated $section parameter.
-    if section && !section.empty?
-      key = "#{section}.#{key}"
+      current = Puppet::Util::Execution.execute(
+        "cd /; git config --#{scope} --get #{name}",
+        :uid => user,
+        :failonfail => false,
+        :custom_environment => { 'HOME' => home }
+      ).strip
+
+      if current != value
+        Puppet::Util::Execution.execute(
+          "cd / ; git config --#{scope} #{name} #{value.shellescape}",
+          :uid => user,
+          :failonfail => true,
+          :combine => true,
+          :custom_environment => { 'HOME' => home }
+        )
+      end
     end
-
-    Puppet::Util::Execution.execute(
-      "cd / ; git config --#{scope} #{key} #{value.shellescape}",
-      uid: user,
-      failonfail: true,
-      combine: true,
-      custom_environment: { 'HOME' => home },
-    )
   end
 end
