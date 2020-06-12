@@ -3,8 +3,6 @@ appveyor.yml:
   delete: true
 .gitlab-ci.yml:
   delete: true
-.travis.yml:
-  delete: true
 hiera.yaml:
   delete: true
 .gitignore:
