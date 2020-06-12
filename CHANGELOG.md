@@ -1,3 +1,7 @@
+## Release 0.6.0
+### Summary
+No new features, just pdk support for testing/validation.  Adds ruby 1.9 conventions, so drops support for Puppet 3.
+
 ## Release 0.5.0
 ### Summary
 A few new features in this release, including work around supporting default git config and accepting flat git config values. Also a couple of bugfixes and a small readme update.
