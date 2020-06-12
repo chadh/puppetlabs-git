@@ -6,22 +6,22 @@ describe Facter::Util::Fact do
   }
 
   describe "git_exec_path" do
+    subject { Facter.fact(:git_exec_path).value }
 
     context 'windows' do
       it do
-        Facter.fact(:osfamily).stubs(:value).returns('windows')
-        Facter::Util::Resolution.expects(:exec).with("git --exec-path 2>nul").returns('windows_path_change')
-        Facter.fact(:git_exec_path).value.should == 'windows_path_change'
+        allow(Facter).to receive('value').with(:osfamily).and_return('windows')
+        allow(Facter::Util::Resolution).to receive('exec').with("git --exec-path 2>nul").and_return('windows_path_change')
+        is_expected.to eq('windows_path_change')
       end
     end
 
     context 'non-windows' do
       it do
-        Facter.fact(:osfamily).stubs(:value).returns('RedHat')
-        Facter::Util::Resolution.expects(:exec).with("git --exec-path 2>/dev/null").returns('/usr/libexec/git-core')
-        Facter.fact(:git_exec_path).value.should == '/usr/libexec/git-core'
+        allow(Facter).to receive('value').with(:osfamily).and_return('RedHat')
+        allow(Facter::Util::Resolution).to receive('exec').with("git --exec-path 2>/dev/null").and_return('/usr/libexec/git-core')
+        is_expected.to eq('/usr/libexec/git-core')
       end
     end
-
   end
 end
