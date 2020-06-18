@@ -1,7 +1,6 @@
-require "shellwords"
+require 'shellwords'
 
 Puppet::Type.type(:git_config).provide(:git_config) do
-
   mk_resource_methods
 
   def value
@@ -19,10 +18,10 @@ Puppet::Type.type(:git_config).provide(:git_config) do
 
     current = Puppet::Util::Execution.execute(
       "cd / ; git config --#{scope} --get #{key}",
-      :uid => user,
-      :failonfail => false,
-      :combine => true,
-      :custom_environment => { 'HOME' => home }
+      uid: user,
+      failonfail: false,
+      combine: true,
+      custom_environment: { 'HOME' => home },
     )
     @property_hash[:value] = current.strip
     @property_hash[:value]
@@ -43,11 +42,10 @@ Puppet::Type.type(:git_config).provide(:git_config) do
 
     Puppet::Util::Execution.execute(
       "cd / ; git config --#{scope} #{key} #{value.shellescape}",
-      :uid => user,
-      :failonfail => true,
-      :combine => true,
-      :custom_environment => { 'HOME' => home }
+      uid: user,
+      failonfail: true,
+      combine: true,
+      custom_environment: { 'HOME' => home },
     )
   end
-
 end

@@ -1,0 +1,13 @@
+---
+appveyor.yml:
+  delete: true
+.gitlab-ci.yml:
+  delete: true
+hiera.yaml:
+  delete: true
+.gitignore:
+  paths:
+    - junit.xml
+    - /.history
+spec/spec_helper.rb:
+  mock_with: ':rspec'
