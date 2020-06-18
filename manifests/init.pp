@@ -39,5 +39,9 @@ class git (
     }
   }
 
-  create_resources(git::config, git_config_hash($configs), $configs_defaults)
+  git_config_hash($configs).each | $k, $v | {
+    git::config { $k:
+      * => $configs_defaults + $v,
+    }
+  }
 }

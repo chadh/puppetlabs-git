@@ -1,48 +1,56 @@
+require 'puppet/resource_api/simple_provider'
+require 'etc'
 require 'shellwords'
 
-Puppet::Type.type(:git_config).provide(:git_config) do
-  mk_resource_methods
+# @summary Provider for configuring git
+class Puppet::Provider::GitConfig::GitConfig < Puppet::ResourceApi::SimpleProvider
+  def get(_context, names)
+    ret = []
+    names.each do |resource|
+      key = resource[:key]
+      user = resource[:user]
+      scope = resource[:scope]
+      home = Etc.getpwnam(user)[:dir]
+      currentvalue = Puppet::Util::Execution.execute(
+        "cd /; git config --#{scope} --get #{key}",
+        uid: user,
+        failonfail: false,
+        custom_environment: { 'HOME' => home },
+      ).strip
+      next if currentvalue.empty?
 
-  def value
-    require 'etc'
-    user    = @property_hash[:user]    = @resource[:user]
-    key     = @property_hash[:key]     = @resource[:key]
-    section = @property_hash[:section] = @resource[:section]
-    scope   = @property_hash[:scope]   = @resource[:scope]
-    home    = Etc.getpwnam(user)[:dir]
-
-    # Backwards compatibility with deprecated $section parameter.
-    if section && !section.empty?
-      key = "#{section}.#{key}"
+      ret.push(
+        ensure: 'present',
+        key: key,
+        user: user,
+        scope: scope,
+        value: currentvalue,
+      )
     end
+    ret
+  end
 
-    current = Puppet::Util::Execution.execute(
-      "cd / ; git config --#{scope} --get #{key}",
-      uid: user,
-      failonfail: false,
+  def create(_context, name, should)
+    home = Etc.getpwnam(name[:user])[:dir]
+
+    Puppet::Util::Execution.execute(
+      "cd / ; git config --#{name[:scope]} #{name[:key]} #{should[:value].shellescape}",
+      uid: name[:user],
+      failonfail: true,
       combine: true,
       custom_environment: { 'HOME' => home },
     )
-    @property_hash[:value] = current.strip
-    @property_hash[:value]
   end
 
-  def value=(value)
-    require 'etc'
-    user    = @resource[:user]
-    key     = @resource[:key]
-    section = @resource[:section]
-    scope   = @resource[:scope]
-    home    = Etc.getpwnam(user)[:dir]
+  def update(context, name, should)
+    create(context, name, should)
+  end
 
-    # Backwards compatibility with deprecated $section parameter.
-    if section && !section.empty?
-      key = "#{section}.#{key}"
-    end
-
+  def delete(_context, name)
+    home = Etc.getpwnam(name[:user])[:dir]
     Puppet::Util::Execution.execute(
-      "cd / ; git config --#{scope} #{key} #{value.shellescape}",
-      uid: user,
+      "cd / ; git config --unset --#{name[:scope]} #{name[:key]}",
+      uid: name[:user],
       failonfail: true,
       combine: true,
       custom_environment: { 'HOME' => home },
