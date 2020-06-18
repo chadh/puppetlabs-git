@@ -22,4 +22,3 @@ Facter.add('git_exec_path') do
     Facter::Util::Resolution.exec(git_exec_path_cmd)
   end
 end
-

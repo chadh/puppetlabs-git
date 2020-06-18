@@ -7,7 +7,7 @@ Puppet::Functions.create_function(:git_config_hash) do
   # @return [String] canonicalized configuration hash
   # @example Calling the function
   #
-  #  git_config_hash({"foo" => 1, "bar" => {"value" => 2}}) 
+  #  git_config_hash({"foo" => 1, "bar" => {"value" => 2}})
   #
   #  returns {"foo" => {"value" => 1}, "bar" => {"value" => 2}}
   #
@@ -17,6 +17,6 @@ Puppet::Functions.create_function(:git_config_hash) do
   end
 
   def git_config_hash(configs)
-    return Hash[configs.map {|k, v| [k, v.is_a?(Hash) ? v : {"value" => v}] }]
+    Hash[configs.map { |k, v| [k, v.is_a?(Hash) ? v : { value: v }] }]
   end
 end
